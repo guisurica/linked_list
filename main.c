@@ -33,28 +33,86 @@ struct Node *insert_begin(struct Node *head, int data) {
     return new_node;
 }
 
-struct Node *insert_position(struct Node *head, int index, int data) {
-    struct Node* new_node = create_node(data);
-    int need_link = 0;
-    struct Node* temp_node = NULL;
+int count_nodes(struct Node *head) {
+    int nodes = 0;
+    while(head != NULL) {
+        nodes++;
+        head = head->next;
+    }
 
+    return nodes;
+}
+
+struct Node *get_first_node(struct Node *head) {
+    return head;
+}
+
+struct Node *get_position_node(struct Node *head, int position) {
     int counter = 0;
-    struct Node* last = head;
-    while(counter < index) {
-        last = last->next;
+    struct Node *current = NULL;
+    while(counter < position) { 
+        head = head->next;
         counter++;
     }
 
-    if (last->next != NULL) {
-        need_link = 1;
-        temp_node = last;
+    current = head;
+
+    return current;
+}
+
+struct Node *get_last_node(struct Node *head) {
+    struct Node *last = NULL;
+
+    if (head->next == NULL) return head;
+
+    while(head->next != NULL) {
+        if (head->next == NULL) {
+            last = head->next;
+        }
+
+        head = head->next;
     }
 
-    last->next = new_node;
+    if (last == NULL) return head;
 
-    if (need_link == 1) {
-        new_node->next = temp_node;
+    return last;
+}
+
+struct Node *insert_position(struct Node *head, int index, int data) {
+    struct Node *node = create_node(data);
+    int nodes = count_nodes(head);
+
+    if (head == NULL) {
+        return node;
     }
+
+    if (index == 0) {
+        node->next = head;
+        if (head->next == NULL) {
+            head->next = NULL;
+        }
+
+        return node;
+    }
+
+    if (head->next == NULL) {
+        head->next = node;
+        return head;
+    }
+
+    if (index >= nodes) {
+        struct Node *last_inserted_node = get_last_node(head);
+
+        last_inserted_node->next = node;
+        node->next = NULL;
+
+        return head;
+    }
+
+    struct Node *position_node = get_position_node(head, index - 1);
+
+    node->next = position_node->next;
+    position_node->next = node;
 
     return head;
 }
@@ -70,13 +128,10 @@ void print_list(struct Node *head) {
 
 int main(void)  {
     struct Node *n1 = create_node(1);
-    n1->next = create_node(2);
-    n1->next->next = create_node(3);
-    n1->next->next->next = create_node(4);
+    n1->next = create_node(4);
+    n1->next->next = create_node(5);
 
-    n1 = insert_begin(n1, 0);
-    insert_last(n1, 6);
-    n1 = insert_position(n1, 5, 5);
+    n1 = insert_position(n1, 3, 6);
 
     print_list(n1);
 }
