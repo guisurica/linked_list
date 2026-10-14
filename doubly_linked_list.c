@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define EMPTY_LIST -1
+
 struct Node {
     int data;
     struct Node *next;
@@ -19,6 +21,9 @@ enum PrintType {
 
 struct Node *create_node(int data, struct Node *pNext, struct Node *pPrev) {
     struct Node *node = malloc(sizeof(struct Node));
+    if (node == NULL)
+        return NULL;
+
     node->data = data;
     node->next = NULL;
     node->prev = NULL;
@@ -78,9 +83,9 @@ struct Node *get_position_node(struct Node *pNode, int position) {
     int counter = 0;
     while (counter < position) {
         if (temp_node->next != NULL) {
-            counter++;
             temp_node = temp_node->next;
         }
+        counter++;
     }
 
     return temp_node;
@@ -187,14 +192,16 @@ struct Node *in_last(struct Node *pNode, int data) {
 
 struct Node *in_position(struct Node *pNode, int data, int position) {
 
-    struct Node *temp_node = malloc(sizeof(struct Node));
+    struct Node *temp_node = get_first_node(pNode);
     if (temp_node == NULL) {
-        return NULL;
+        struct Node *new_node = create_node(data, NULL, NULL);
+        return new_node;
     }
 
     struct Node *head = get_first_node(pNode);
     if (head == NULL) {
-        return NULL;
+        struct Node *new_node = create_node(data, NULL, NULL);
+        return new_node;
     }
 
     int nodes = count_nodes(pNode);
@@ -202,8 +209,7 @@ struct Node *in_position(struct Node *pNode, int data, int position) {
         return NULL;
     }
 
-    if (position == 0) {
-        temp_node = get_first_node(pNode);
+    if (position <= 0) {
         struct Node *node = create_node(data, temp_node, NULL);
         temp_node->prev = node;
 
@@ -229,6 +235,7 @@ struct Node *in_position(struct Node *pNode, int data, int position) {
     }
 
     pos_node->next = new_node;
+    new_node->prev = pos_node;
 
     free(temp_node);
     temp_node = NULL;
@@ -241,7 +248,13 @@ struct Node *del_begin(struct Node *pNode) {
     if (first_node == NULL) return NULL;
 
     struct Node *next_node = first_node->next;
-    if (next_node == NULL) return NULL;
+    if (next_node == NULL) {
+        first_node->data = EMPTY_LIST;
+        first_node->next = NULL;
+        first_node->prev = NULL;
+
+        return first_node;
+    }
 
     first_node->next = NULL;
     first_node->prev = NULL;
@@ -303,6 +316,9 @@ struct Node *del_position(struct Node *pNode, int pos) {
     next_node->prev = prev_node;
     prev_node->next = next_node;
 
+    free(pos_node);
+    pos_node = NULL;
+
     return head;
 }
 
@@ -315,39 +331,15 @@ int panic(char *message) {
 int main(void) {
     
     struct Node *node = create_node(1, NULL, NULL);
-    node->next = create_node(2, node->next, node);
-    node->next->next = create_node(3, node->next->next, node->next);
-    
-    node = in_begin(node->next, 0);
-    if (node == NULL) {
-        return panic("Error: node");
-    }
-
-    node = in_last(node, 4);
-    if (node == NULL) {
-        return panic("Error: node");
-    }
-
-    node = in_position(node, -1, 0);
-    if (node == NULL) {
-        return panic("Error: node");
-    }
-
-    node = in_position(node, 5, 19);
-    if (node == NULL) {
-        return panic("Error: node");
-    }
-
-    node = del_begin(node);
-
-    node = del_last(node);
-
-    node = del_position(node, -1);
 
     print_nodes(node, Off, Normal);
 
-    free(node);
-    node = NULL;
+    void *temp_ptr;
+    while(node) {
+        temp_ptr = node;
+        node = node->next;
+        free(temp_ptr);
+    }
 
     return 0;
 }
